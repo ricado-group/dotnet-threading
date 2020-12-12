@@ -145,11 +145,14 @@ namespace RICADO.Threading
         /// <summary>
         /// Starts all Periodic Items managed by this <see cref="PeriodicFactory"/>
         /// </summary>
-        public async Task StartAll()
+        public async Task StartAll(CancellationToken cancellationToken)
         {
             foreach (IPeriodic item in _periodicItems.Values)
             {
-                await item.Start();
+                if (cancellationToken.IsCancellationRequested == false)
+                {
+                    await item.Start();
+                }
             }
         }
 
@@ -176,12 +179,16 @@ namespace RICADO.Threading
         /// <summary>
         /// Stops all Periodic Items managed by this <see cref="PeriodicFactory"/>
         /// </summary>
-        public async Task StopAll()
+        public async Task StopAll(CancellationToken cancellationToken)
         {
+            List<Task> tasks = new List<Task>();
+            
             foreach(IPeriodic item in _periodicItems.Values)
             {
-                await item.Stop();
+                tasks.Add(item.Stop());
             }
+
+            await Task.WhenAll(tasks);
         }
 
         #endregion

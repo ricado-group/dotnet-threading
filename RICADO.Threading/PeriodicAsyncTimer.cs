@@ -258,6 +258,13 @@ namespace RICADO.Threading
             {
                 await _action(_stoppingCts.Token).ConfigureAwait(false);
             }
+            catch (OperationCanceledException)
+            {
+                if (_stoppingCts.IsCancellationRequested)
+                {
+                    throw;
+                }
+            }
             catch (Exception e)
             {
                 Logger.LogCritical(e, "Unhandled Exception on the Periodic Async Timer Action Method");

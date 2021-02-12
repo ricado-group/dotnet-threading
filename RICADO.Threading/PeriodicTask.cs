@@ -157,6 +157,13 @@ namespace RICADO.Threading
                 {
                     await Task.Delay(_startDelay, _stoppingCts.Token).ConfigureAwait(false);
                 }
+                catch (OperationCanceledException)
+                {
+                    if (_stoppingCts.IsCancellationRequested)
+                    {
+                        throw;
+                    }
+                }
                 catch
                 {
                 }
@@ -168,6 +175,13 @@ namespace RICADO.Threading
                 {
                     await _action(_stoppingCts.Token).ConfigureAwait(false);
                 }
+                catch (OperationCanceledException)
+                {
+                    if (_stoppingCts.IsCancellationRequested)
+                    {
+                        throw;
+                    }
+                }
                 catch (Exception e)
                 {
                     Logger.LogCritical(e, "Unhandled Exception on the Periodic Task Action Method");
@@ -176,6 +190,13 @@ namespace RICADO.Threading
                 try
                 {
                     await Task.Delay(_interval, _stoppingCts.Token).ConfigureAwait(false);
+                }
+                catch (OperationCanceledException)
+                {
+                    if (_stoppingCts.IsCancellationRequested)
+                    {
+                        throw;
+                    }
                 }
                 catch
                 {

@@ -23,7 +23,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="RICADO.Logging" Version="1.0.5" />
+    <PackageReference Include="RICADO.Logging" Version="1.0.6" />
   </ItemGroup>
 
 </Project>

@@ -1,2 +1,2 @@
 # RICADO.Threading
-A Threading Helper Library utilizing System.Threading for .NET 5 Applications
+A Threading Helper Library utilizing System.Threading for .NET 6 Applications

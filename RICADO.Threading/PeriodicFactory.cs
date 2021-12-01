@@ -31,7 +31,7 @@ namespace RICADO.Threading
         #region Public Methods
 
         /// <summary>
-        /// Create a new <see cref="PeriodicTimer"/>
+        /// Create a new <see cref="PeriodicSyncTimer"/>
         /// </summary>
         /// <param name="name">A Name for the Timer</param>
         /// <param name="action">The Method to be periodically called</param>
@@ -40,7 +40,7 @@ namespace RICADO.Threading
         /// <returns>The Name of the new Timer</returns>
         /// <exception cref="System.ArgumentNullException"></exception>
         /// <exception cref="System.ArgumentException"></exception>
-        public string CreateNew(string name, Action action, int interval, int startDelay = 0)
+        public string CreateNew(string? name, Action action, int interval, int startDelay = 0)
         {
             if(name == null)
             {
@@ -57,13 +57,13 @@ namespace RICADO.Threading
                 throw new ArgumentException("The Specified Name has already been used by another Periodic Item", nameof(name));
             }
 
-            _periodicItems.TryAdd(name, new PeriodicTimer(action, interval, startDelay));
+            _periodicItems.TryAdd(name, new PeriodicSyncTimer(action, interval, startDelay));
 
             return name;
         }
 
         /// <summary>
-        /// Create a new <see cref="PeriodicTimer"/>
+        /// Create a new <see cref="PeriodicSyncTimer"/>
         /// </summary>
         /// <param name="action">The Method to be periodically called</param>
         /// <param name="interval">The Interval between Method calls in Milliseconds</param>
@@ -86,7 +86,7 @@ namespace RICADO.Threading
         /// <returns>The Name of the new Task</returns>
         /// <exception cref="System.ArgumentNullException"></exception>
         /// <exception cref="System.ArgumentException"></exception>
-        public string CreateNew(string name, Func<CancellationToken, Task> action, int interval, int startDelay = 0)
+        public string CreateNew(string? name, Func<CancellationToken, Task> action, int interval, int startDelay = 0)
         {
             if (name == null)
             {

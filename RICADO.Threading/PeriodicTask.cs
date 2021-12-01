@@ -9,15 +9,20 @@ namespace RICADO.Threading
     {
         #region Private Properties
 
-        private Task _task;
+        private PeriodicTimer _timer;
+        
+        private Task? _task;
 
-        private Func<CancellationToken, Task> _action;
+        private readonly Func<CancellationToken, Task> _action;
 
         private CancellationTokenSource _stoppingCts;
 
         private int _interval = Timeout.Infinite;
 
         private int _startDelay = Timeout.Infinite;
+
+        private bool _running = false;
+        private readonly object _runningLock = new object();
 
         #endregion
 
@@ -65,12 +70,7 @@ namespace RICADO.Threading
         /// <exception cref="System.ArgumentOutOfRangeException"></exception>
         public PeriodicTask(Func<CancellationToken, Task> action, int interval, int startDelay = 0)
         {
-            if (action == null)
-            {
-                throw new ArgumentNullException(nameof(action));
-            }
-
-            _action = action;
+            _action = action ?? throw new ArgumentNullException(nameof(action));
 
             if (interval < 0)
             {
@@ -85,6 +85,10 @@ namespace RICADO.Threading
             }
 
             _startDelay = startDelay;
+
+            _timer = new PeriodicTimer(TimeSpan.FromMilliseconds(_interval));
+
+            _stoppingCts = new CancellationTokenSource();
         }
 
         #endregion
@@ -97,10 +101,22 @@ namespace RICADO.Threading
         /// </summary>
         public Task Start()
         {
+            lock (_runningLock)
+            {
+                if (_running == true)
+                {
+                    return Task.CompletedTask;
+                }
+
+                _running = true;
+            }
+
             if (_task != null)
             {
                 return Task.CompletedTask;
             }
+
+            _timer = new PeriodicTimer(TimeSpan.FromMilliseconds(_interval));
 
             _stoppingCts = new CancellationTokenSource();
 
@@ -118,19 +134,34 @@ namespace RICADO.Threading
         /// <summary>
         /// Stop the <see cref="PeriodicTask"/>
         /// </summary>
-        public Task Stop()
+        public async Task Stop()
         {
-            if(_stoppingCts != null)
+            lock (_runningLock)
             {
-                _stoppingCts.Cancel();
+                if (_running == false)
+                {
+                    return;
+                }
+
+                _running = false;
             }
 
-            if(_task == null)
+            _stoppingCts.Cancel();
+
+            _timer.Dispose();
+
+            if (_task == null)
             {
-                return Task.CompletedTask;
+                return;
             }
 
-            return _task;
+            try
+            {
+                await _task;
+            }
+            catch (OperationCanceledException)
+            {
+            }
         }
 
         /// <summary>
@@ -138,7 +169,14 @@ namespace RICADO.Threading
         /// </summary>
         public void Dispose()
         {
-            _stoppingCts?.Dispose();
+            lock (_runningLock)
+            {
+                _running = false;
+            }
+
+            _stoppingCts.Dispose();
+
+            _timer.Dispose();
         }
 
         #endregion
@@ -169,8 +207,21 @@ namespace RICADO.Threading
                 }
             }
 
-            while(_stoppingCts.Token.IsCancellationRequested == false)
+            while(await _timer.WaitForNextTickAsync(_stoppingCts.Token) == true)
             {
+                lock(_runningLock)
+                {
+                    if(_running == false)
+                    {
+                        return;
+                    }
+                }
+
+                if(_stoppingCts.IsCancellationRequested == true)
+                {
+                    return;
+                }
+                
                 try
                 {
                     await _action(_stoppingCts.Token).ConfigureAwait(false);
@@ -185,21 +236,6 @@ namespace RICADO.Threading
                 catch (Exception e)
                 {
                     Logger.LogCritical(e, "Unhandled Exception on the Periodic Task Action Method");
-                }
-
-                try
-                {
-                    await Task.Delay(_interval, _stoppingCts.Token).ConfigureAwait(false);
-                }
-                catch (OperationCanceledException)
-                {
-                    if (_stoppingCts.IsCancellationRequested)
-                    {
-                        throw;
-                    }
-                }
-                catch
-                {
                 }
             }
         }

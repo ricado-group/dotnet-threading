@@ -5,21 +5,21 @@ using RICADO.Logging;
 
 namespace RICADO.Threading
 {
-    public sealed class PeriodicTimer : IPeriodic, IDisposable
+    public sealed class PeriodicSyncTimer : IPeriodic, IDisposable
     {
         #region Private Properties
 
         private Timer _timer;
-        private object _timerLock = new object();
+        private readonly object _timerLock = new object();
 
-        private Action _action;
+        private readonly Action _action;
 
         private int _interval = Timeout.Infinite;
 
         private int _startDelay = Timeout.Infinite;
 
         private bool _running = false;
-        private object _runningLock = new object();
+        private readonly object _runningLock = new object();
 
         #endregion
 
@@ -52,48 +52,22 @@ namespace RICADO.Threading
             }
         }
 
-        /// <summary>
-        /// Whether the <see cref="PeriodicTimer"/> is Running
-        /// </summary>
-        public bool IsRunning
-        {
-            get
-            {
-                lock (_runningLock)
-                {
-                    return _running;
-                }
-            }
-            private set
-            {
-                lock (_runningLock)
-                {
-                    _running = value;
-                }
-            }
-        }
-
         #endregion
 
 
         #region Constructor
 
         /// <summary>
-        /// Create a new <see cref="PeriodicTimer"/>
+        /// Create a new <see cref="PeriodicSyncTimer"/>
         /// </summary>
         /// <param name="action">The Method to be periodically called</param>
         /// <param name="interval">The Interval between Method calls in Milliseconds</param>
         /// <param name="startDelay">An Optional Delay when Starting in Milliseconds (Defaults to 0ms)</param>
         /// <exception cref="System.ArgumentNullException"></exception>
         /// <exception cref="System.ArgumentOutOfRangeException"></exception>
-        public PeriodicTimer(Action action, int interval, int startDelay = 0)
+        public PeriodicSyncTimer(Action action, int interval, int startDelay = 0)
         {
-            if(action == null)
-            {
-                throw new ArgumentNullException(nameof(action));
-            }
-
-            _action = action;
+            _action = action ?? throw new ArgumentNullException(nameof(action));
 
             if(interval < 0)
             {
@@ -121,7 +95,7 @@ namespace RICADO.Threading
         #region Public Methods
 
         /// <summary>
-        /// Start the <see cref="PeriodicTimer"/>
+        /// Start the <see cref="PeriodicSyncTimer"/>
         /// </summary>
         public Task Start()
         {
@@ -144,7 +118,7 @@ namespace RICADO.Threading
         }
 
         /// <summary>
-        /// Stop the <see cref="PeriodicTimer"/>
+        /// Stop the <see cref="PeriodicSyncTimer"/>
         /// </summary>
         public Task Stop()
         {
@@ -170,7 +144,7 @@ namespace RICADO.Threading
         }
 
         /// <summary>
-        /// Release all resources used by the current instance of <see cref="PeriodicTimer"/>
+        /// Release all resources used by the current instance of <see cref="PeriodicSyncTimer"/>
         /// </summary>
         public void Dispose()
         {
@@ -181,12 +155,7 @@ namespace RICADO.Threading
 
             lock (_timerLock)
             {
-                if (_timer != null)
-                {
-                    _timer.Dispose();
-
-                    _timer = null;
-                }
+                _timer.Dispose();
             }
         }
 
@@ -199,30 +168,33 @@ namespace RICADO.Threading
         /// The Timer Callback Method
         /// </summary>
         /// <param name="state">The Timer State Object</param>
-        private void timerCallback(object state)
+        private void timerCallback(object? state)
         {
-            if (IsRunning == false)
+            lock(_runningLock)
             {
-                return;
+                if(_running == false)
+                {
+                    return;
+                }
             }
 
             try
             {
                 lock (_timerLock)
                 {
-                    if (_timer != null)
-                    {
-                        _timer.Change(Timeout.Infinite, Timeout.Infinite);
-                    }
+                    _timer.Change(Timeout.Infinite, Timeout.Infinite);
                 }
             }
             catch
             {
             }
 
-            if (IsRunning == false)
+            lock(_runningLock)
             {
-                return;
+                if(_running == false)
+                {
+                    return;
+                }
             }
 
             try
@@ -234,19 +206,19 @@ namespace RICADO.Threading
                 Logger.LogCritical(e, "Unhandled Exception on the Periodic Timer Action Method");
             }
 
-            if (IsRunning == false)
+            lock (_runningLock)
             {
-                return;
+                if (_running == false)
+                {
+                    return;
+                }
             }
 
             try
             {
                 lock (_timerLock)
                 {
-                    if (_timer != null)
-                    {
-                        _timer.Change(_interval, Timeout.Infinite);
-                    }
+                    _timer.Change(_interval, Timeout.Infinite);
                 }
             }
             catch

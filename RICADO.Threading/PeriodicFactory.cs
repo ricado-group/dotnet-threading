@@ -40,7 +40,7 @@ namespace RICADO.Threading
         /// <returns>The Name of the new Timer</returns>
         /// <exception cref="System.ArgumentNullException"></exception>
         /// <exception cref="System.ArgumentException"></exception>
-        public string CreateNew(string? name, Action action, int interval, int startDelay = 0)
+        public string CreateNew(string name, Action action, int interval, int startDelay = 0)
         {
             if(name == null)
             {
@@ -86,7 +86,7 @@ namespace RICADO.Threading
         /// <returns>The Name of the new Task</returns>
         /// <exception cref="System.ArgumentNullException"></exception>
         /// <exception cref="System.ArgumentException"></exception>
-        public string CreateNew(string? name, Func<CancellationToken, Task> action, int interval, int startDelay = 0)
+        public string CreateNew(string name, Func<CancellationToken, Task> action, int interval, int startDelay = 0)
         {
             if (name == null)
             {

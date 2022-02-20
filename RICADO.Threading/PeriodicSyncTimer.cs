@@ -168,7 +168,7 @@ namespace RICADO.Threading
         /// The Timer Callback Method
         /// </summary>
         /// <param name="state">The Timer State Object</param>
-        private void timerCallback(object? state)
+        private void timerCallback(object state)
         {
             lock(_runningLock)
             {

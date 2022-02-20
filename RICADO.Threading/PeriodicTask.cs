@@ -9,9 +9,11 @@ namespace RICADO.Threading
     {
         #region Private Properties
 
+#if !NETSTANDARD
         private PeriodicTimer _timer;
-        
-        private Task? _task;
+#endif
+
+        private Task _task;
 
         private readonly Func<CancellationToken, Task> _action;
 
@@ -86,7 +88,9 @@ namespace RICADO.Threading
 
             _startDelay = startDelay;
 
+#if !NETSTANDARD
             _timer = new PeriodicTimer(TimeSpan.FromMilliseconds(_interval));
+#endif
 
             _stoppingCts = new CancellationTokenSource();
         }
@@ -116,7 +120,9 @@ namespace RICADO.Threading
                 return Task.CompletedTask;
             }
 
+#if !NETSTANDARD
             _timer = new PeriodicTimer(TimeSpan.FromMilliseconds(_interval));
+#endif
 
             _stoppingCts = new CancellationTokenSource();
 
@@ -148,7 +154,9 @@ namespace RICADO.Threading
 
             _stoppingCts.Cancel();
 
+#if !NETSTANDARD
             _timer.Dispose();
+#endif
 
             if (_task == null)
             {
@@ -176,7 +184,9 @@ namespace RICADO.Threading
 
             _stoppingCts.Dispose();
 
+#if !NETSTANDARD
             _timer.Dispose();
+#endif
         }
 
         #endregion
@@ -207,7 +217,11 @@ namespace RICADO.Threading
                 }
             }
 
+#if NETSTANDARD
+            while(_stoppingCts.Token.IsCancellationRequested == false)
+#else
             while(await _timer.WaitForNextTickAsync(_stoppingCts.Token) == true)
+#endif
             {
                 lock(_runningLock)
                 {
@@ -237,6 +251,23 @@ namespace RICADO.Threading
                 {
                     Logger.LogCritical(e, "Unhandled Exception on the Periodic Task Action Method");
                 }
+
+#if NETSTANDARD
+                try
+                {
+                    await Task.Delay(_interval, _stoppingCts.Token).ConfigureAwait(false);
+                }
+                catch (OperationCanceledException)
+                {
+                    if(_stoppingCts.IsCancellationRequested)
+                    {
+                        throw;
+                    }
+                }
+                catch
+                {
+                }
+#endif
             }
         }
 

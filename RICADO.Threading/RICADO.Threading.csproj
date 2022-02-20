@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net6.0</TargetFramework>
+    <TargetFrameworks>net6.0;netstandard2.0</TargetFrameworks>
     <Authors>RICADO Group</Authors>
     <Company>RICADO Group LP</Company>
     <Description>A Threading Helper Library utilizing System.Threading for .NET 6 Applications</Description>
@@ -12,8 +12,6 @@
     <IncludeSymbols>true</IncludeSymbols>
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
     <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>enable</Nullable>
   </PropertyGroup>
 
   <ItemGroup>
@@ -28,7 +26,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="RICADO.Logging" Version="1.1.0" />
+    <PackageReference Include="RICADO.Logging" Version="1.2.0" />
   </ItemGroup>
 
 </Project>

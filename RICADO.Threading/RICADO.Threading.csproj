@@ -4,7 +4,7 @@
     <TargetFrameworks>net6.0;netstandard2.0</TargetFrameworks>
     <Authors>RICADO Group</Authors>
     <Company>RICADO Group LP</Company>
-    <Description>A Threading Helper Library utilizing System.Threading for .NET 6 Applications</Description>
+    <Description>A Threading Helper Library utilizing System.Threading for .NET 6 and .NET Standard 2.0 Applications</Description>
     <Copyright>Copyright © RICADO Group LP 2009 - 2021</Copyright>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
     <PackageIcon>packageIcon.png</PackageIcon>

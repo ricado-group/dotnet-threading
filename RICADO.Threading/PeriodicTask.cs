@@ -217,10 +217,12 @@ namespace RICADO.Threading
                 }
             }
 
+            bool firstRun = true;
+
 #if NETSTANDARD
             while(_stoppingCts.Token.IsCancellationRequested == false)
 #else
-            while(await _timer.WaitForNextTickAsync(_stoppingCts.Token) == true)
+            while(firstRun == true || await _timer.WaitForNextTickAsync(_stoppingCts.Token) == true)
 #endif
             {
                 lock(_runningLock)
@@ -250,6 +252,10 @@ namespace RICADO.Threading
                 catch (Exception e)
                 {
                     Logger.LogCritical(e, "Unhandled Exception on the Periodic Task Action Method");
+                }
+                finally
+                {
+                    firstRun = false;
                 }
 
 #if NETSTANDARD

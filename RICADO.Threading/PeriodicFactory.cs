@@ -188,7 +188,11 @@ namespace RICADO.Threading
                 tasks.Add(item.Stop());
             }
 
+#if NET8_0_OR_GREATER
+            await Task.WhenAll(tasks).WaitAsync(cancellationToken);
+#else
             await Task.WhenAll(tasks);
+#endif
         }
 
         #endregion

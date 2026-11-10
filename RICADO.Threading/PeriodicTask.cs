@@ -152,7 +152,11 @@ namespace RICADO.Threading
                 _running = false;
             }
 
+#if NET8_0_OR_GREATER
+            await _stoppingCts.CancelAsync();
+#else
             _stoppingCts.Cancel();
+#endif
 
 #if !NETSTANDARD
             _timer.Dispose();
